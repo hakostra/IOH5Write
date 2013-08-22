@@ -39,6 +39,7 @@ Test the code by running the attached cavity tutorial with the attached ``./Allr
 Known bugs and limitations
 --------------------------
 There are a few known bugs and limitations:
+
 1. The code only work in parallel. This is a consequence of the design of OpenFOAM, since ``MPI_Init`` is never called for serial runs, hence the parallel HDF5 library cannot use MPI-IO.
 2. The XDMF file must be written after the simulation. This is not a bug, but a slight limitation. Currently some Matlab-scripts are provided for this, however, I think Python would be an ideal tool for this task. If anyone creates a Python-parser for the HDF5-files, please contact me!
 3. No boundary data is written. This is a consequence of laziness. I have never needed this for my research, hence only the internal cell-centred data is written. Again, this is not a difficult addition, and if anyone had the time to add this, please contact me if you want me to include this in the public release.
