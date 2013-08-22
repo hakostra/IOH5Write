@@ -1,0 +1,18 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+[ -n "$FOAM_USER_LIBBIN" ] || {
+    echo "Error: FOAM_USER_LIBBIN not set"
+    echo "    Check the OpenFOAM entries in your dot-files and source them."
+    exit 1
+}
+
+# Build OpenFOAM user libraries and applications
+if [ -d src ]; then
+  src/Allwmake
+fi
+
+if [ -d applications ]; then
+  applications/Allwmake
+fi
+

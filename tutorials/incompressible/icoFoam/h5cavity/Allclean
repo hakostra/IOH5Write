@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Remove decomposition subdirs
+rm -rf processor*
+
+# Remove log files
+rm output/*
+
+# Clear any reconstructed results
+foamCleanTutorials
+
+# And delete mesh
+foamClearPolyMesh
+

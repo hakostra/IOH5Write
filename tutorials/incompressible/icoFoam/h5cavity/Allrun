@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Create dir for output
+if [ ! -d output ]; then
+  mkdir output
+fi
+
+# Create base mesh and decompose
+blockMesh > output/1-blockMesh.log 2>&1
+decomposePar -force > output/2-decomposePar.log 2>&1
+
+# Run analysis
+mpirun -np 4 icoFoam -parallel > output/3-icoFoam.log 2>&1
+

@@ -1,0 +1,9 @@
+h5Write/h5Write.C
+h5Write/h5WriteFunctionObject.C
+h5Write/h5WriteGrouping.C
+h5Write/h5WriteField.C
+h5Write/h5WriteCloud.C
+h5Write/h5WriteMesh.C
+h5Write/h5FileOps.C
+
+LIB = $(FOAM_USER_LIBBIN)/libIOh5Write
