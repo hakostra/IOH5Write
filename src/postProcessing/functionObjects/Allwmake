@@ -3,6 +3,6 @@ cd ${0%/*} || exit 1    # run from this directory
 makeType=${1:-libso}
 set -x
 
-wmake $makeType IOh5Write
+wmake $makeType IOh5Write ; cp IOh5Write/writeXDMF.py $FOAM_USER_APPBIN
 
 # ----------------------------------------------------------------- end-of-file

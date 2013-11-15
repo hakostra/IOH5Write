@@ -77,6 +77,7 @@ void Foam::h5Write::cloudWrite()
         // Allocate memory
         label* origProc;    origProc = new label[myParticles];
         label* origId;      origId   = new label[myParticles];
+        label* cell;        cell     = new label[myParticles];
         
         ioScalar* position; position = new ioScalar[myParticles*3];
         ioScalar* U;        U        = new ioScalar[myParticles*3];
@@ -94,6 +95,7 @@ void Foam::h5Write::cloudWrite()
         {
             origProc[i]     = pIter().origProc();
             origId[i]       = pIter().origId();
+            cell[i]         = pIter().cell();
             
             position[3*i+0] = pIter().position().x();
             position[3*i+1] = pIter().position().y();
@@ -220,6 +222,42 @@ void Foam::h5Write::cloudWrite()
         H5Sclose(fileSpace);
         
         
+        // Cell of particle
+        sprintf
+            (
+                datasetName,
+                "CLOUDS/%s/%s/cell",
+                cloudNames_[cloudI].c_str(),
+                mesh_.time().timeName().c_str()
+            );
+        dsetID = H5Dcreate2
+            (
+                fileID_,
+                datasetName,
+                H5T_NATIVE_INT,
+                fileSpace,
+                plistCreate,
+                H5P_DEFAULT,
+                H5P_DEFAULT
+            );
+        if ( myParticles > 0 )
+        {
+            memSpace = H5Screate_simple(1, count, NULL);
+            H5Dwrite
+                (
+                    dsetID, 
+                    H5T_NATIVE_INT,
+                    memSpace,
+                    fileSpace,
+                    plistWrite,
+                    cell
+                );
+              H5Sclose(memSpace);
+        }
+        H5Dclose(dsetID);
+        
+        // Close filespace
+        H5Sclose(fileSpace);
         
         
         
@@ -451,6 +489,7 @@ void Foam::h5Write::cloudWrite()
         // Release memory
         delete [] origProc;
         delete [] origId;
+        delete [] cell;
         
         delete [] position;
         delete [] U;
