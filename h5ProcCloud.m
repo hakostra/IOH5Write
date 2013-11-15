@@ -1,4 +1,8 @@
 % Script to process and write metadata from HDF5 data file
+%
+% This script is now obsolete, and all functionality here is replaced by a
+% Python-script 'writeXDMF.py'.
+
 
 fileName = '../h5Data/h5Data0.h5';
 [upperPath, folder] = fileparts(pwd);

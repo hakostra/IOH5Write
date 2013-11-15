@@ -31,6 +31,13 @@ The solution of your problem (that is going to be written) is usually found by a
 This choice of output precision is done at compile time, and the default is single precision (32 bit floating point numbers). To switch, you set either -DWRITE_SP (for single prec.) or -DWRITE_DP (for double prec.) in the ``src/postProcessing/functionObjects/IOh5Write/Make/options`` file. See around line 9 for this option.
 
 
+Writing XDMF files
+------------------
+The XDMF files is written *after* the simulation is finished by using the python script 'writeXDMF.py'. The script will, if not supplied with any additional arguments, parse the file 'h5Data/h5Data0.h5', and write the resulting XDMF files in a folder called 'xdmf'. One XDMF-file will be created for the field/mesh data, and one XDMF-file will be created for each cloud of particles. Usage instructions can be given with the option --help.
+
+In case someone is interested, two (obsolete) Matlab-scripts that parse HDF5-files is also supplied. These do not have the same functionality or usability as the Python-script mentioned above, and they are not maintained.
+
+
 Testing
 -------
 Test the code by running the attached cavity tutorial with the attached ``./Allrun`` script. A directory called h5Data should be created, in which the file h5Data0.h5 is created. To use the code on other cases, look in the ``controlDict`` file in this case.
@@ -41,7 +48,7 @@ Known bugs and limitations
 There are a few known bugs and limitations:
 
 1. The code only work in parallel. This is a consequence of the design of OpenFOAM, since ``MPI_Init`` is never called for serial runs, hence the parallel HDF5 library cannot use MPI-IO.
-2. The XDMF file must be written after the simulation. This is not a bug, but a slight limitation. Currently some Matlab-scripts are provided for this, however, I think Python would be an ideal tool for this task. If anyone creates a Python-parser for the HDF5-files, please contact me!
+2. The XDMF file must be written after the simulation. This is not a bug, but a slight limitation.
 3. No boundary data is written. This is a consequence of laziness. I have never needed this for my research, hence only the internal cell-centred data is written. Again, this is not a difficult addition, and if anyone had the time to add this, please contact me if you want me to include this in the public release.
 4. The code is not very well structured, and does not utilize many of the object-oriented features C++ gives. This is partly because the HDF5 library is a pure C library, requiring you to deal with pointers to arrays and stuff, partly due to my lack of C++ skills. This is on top of the list of things that needs to be done, perhaps I will fix it when I find time.
 
