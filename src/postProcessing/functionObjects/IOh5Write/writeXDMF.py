@@ -16,8 +16,11 @@ import argparse
 import os
 
 
+# Define a dictionary with the XDMF attribute types
+xdmfAttrTypes = {1: 'Scalar', 3: 'Vector', 6: 'Tensor6', 9: 'Tensor'}
 
-# Function that checks is there are any clouds present and returns a list with their names
+
+# Checks is there are any clouds present and returns a list with their names
 def detectClouds(f) :
     # Check if the file contain any clouds
     if ('CLOUDS' in f['/']) is False :
@@ -38,9 +41,9 @@ def detectFields(f) :
     return True
 
 
-
-# Function to write cloud data
+# Parse and write clouds
 def writeCloud(cloud, fo, noZero) :
+    
     # Create a list of scalar time values
     timeNames = list(cloud.keys())
     timeValues = [float(i) for i in timeNames]
@@ -48,17 +51,12 @@ def writeCloud(cloud, fo, noZero) :
 
 
     # Determine the precision of the data in the cloud
-    writePrec = cloud[timeNames[0]]['position'].dtype
-    if writePrec == numpy.dtype('f4') :
-        prec = 4
-    elif writePrec == numpy.dtype('f8') :
-        prec = 8
-    else :
-        print('Error: Cloud \'{}\' was created using an unknown floating point format.'.format(cloud.name))
-        exit(1)
+    prec = cloud[timeNames[0]]['position'].dtype.itemsize
     
-    # Find name and path to HDF5-file
+    
+    # Find name and path to HDF5-file relative to XDMF-file
     h5Path = os.path.relpath(cloud.parent.parent.file.filename, os.path.dirname(fo.name))
+    
     
     # Print header
     fo.write('<Xdmf>\n')
@@ -68,6 +66,7 @@ def writeCloud(cloud, fo, noZero) :
     
     # Loop over all times
     for index in timeIndex :
+        
         # Skip time = 0 if required
         if noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
             continue
@@ -96,23 +95,6 @@ def writeCloud(cloud, fo, noZero) :
             h = cloud[timeName][attr]
             nCmp =  int(h.size/h.shape[0])
             
-            # Determine attribute type (Scalar, Vector, Tensor)
-            if nCmp == 1 :
-                attributeType = 'Scalar'
-                dims = '{}'.format(nPoints)
-            elif nCmp == 3 :
-                attributeType = 'Vector'
-                dims = '{} 3'.format(nPoints)
-            elif nCmp == 6 :
-                attributeType = 'Tensor6'
-                dims = '{} 6'.format(nPoints)
-            elif nCmp == 9 :
-                attributeType = 'Tensor'
-                dims = '{} 9'.format(nPoints)
-            else :
-                print('Error: Unknown data length')
-                exit(1)
-            
             # Determine number type (Int, Float)
             if h.dtype in (numpy.dtype('f4'), numpy.dtype('f8')):
                 numberType = 'Float'
@@ -123,17 +105,18 @@ def writeCloud(cloud, fo, noZero) :
                 exit(1)
             
             # Write data
-            fo.write('        <Attribute Name="{}" Center="Node" AttributeType="{}">\n'.format(attr, attributeType))
-            fo.write('          <DataStructure Dimensions="{}" NumberType="{}" Presicion="{}" Format="HDF" >\n'.format(dims, numberType, prec))
+            fo.write('        <Attribute Name="{}" Center="Node" AttributeType="{}">\n'.format(attr, xdmfAttrTypes[nCmp]))
+            fo.write('          <DataStructure Dimensions="{} {}" NumberType="{}" Presicion="{}" Format="HDF" >\n'.format(nPoints, nCmp, numberType, prec))
             fo.write('            {}/{}\n'.format(pathInFile, attr))
             fo.write('          </DataStructure>\n')
             fo.write('        </Attribute>\n')
             
         
+        # End of current time
         fo.write('      </Grid>\n\n\n')
 
 
-    # Print footer
+    # Print file footer
     fo.write('    </Grid>\n')
     fo.write('  </Domain>\n')
     fo.write('</Xdmf>\n');
@@ -142,15 +125,17 @@ def writeCloud(cloud, fo, noZero) :
     return
 
 
-# Function to write field data
+# Parse and write mesh/fields
 def writeFields(f, fo, noZero) :
     
     # Sone useful handles
     mesh = f['MESH/0']
     fields = f['FIELDS']
 
+
     # Find number of processes
     nProcs = len(mesh)
+
 
     # Find number of points, cells and dataset length for each process
     nPoints = [None]*nProcs
@@ -178,16 +163,10 @@ def writeFields(f, fo, noZero) :
 
     # Determine the precision of the HDF5 file
     someFieldName = list(fields[timeNames[0]]['processor0'].keys())[0]
-    writePrec = fields[timeNames[0]]['processor0'][someFieldName].dtype
-    if writePrec == numpy.dtype('f4') :
-        prec = 4
-    elif writePrec == numpy.dtype('f8') :
-        prec = 8
-    else :
-        print('File \'{}\' was created using an unknown floating point format.'.format(f.filename))
-        exit(1)
+    prec = fields[timeNames[0]]['processor0'][someFieldName].dtype.itemsize
     
-    # Find name and path to HDF5-file
+    
+    # Find name and path to HDF5-file relative to XDMF-file
     h5Path = os.path.relpath(f.filename, os.path.dirname(fo.name))
     
     
@@ -195,6 +174,7 @@ def writeFields(f, fo, noZero) :
     fo.write('<Xdmf>\n')
     fo.write('  <Domain>\n')
     fo.write('    <Grid Name="FieldData" GridType="Collection" CollectionType="Temporal">\n\n')
+    
     
     # Loop over all times
     for index in timeIndex :
@@ -230,24 +210,8 @@ def writeFields(f, fo, noZero) :
                 h = fields[timeName][proc][field]
                 nCmp =  int(h.size/h.shape[0])
                 
-                if nCmp == 1 :
-                    attributeType = 'Scalar'
-                    dims = '{}'.format(nCells[i])
-                elif nCmp == 3 :
-                    attributeType = 'Vector'
-                    dims = '{} 3'.format(nCells[i])
-                elif nCmp == 6 :
-                    attributeType = 'Tensor6'
-                    dims = '{} 6'.format(nCells[i])
-                elif nCmp == 9 :
-                    attributeType = 'Tensor'
-                    dims = '{} 9'.format(nCells[i])
-                else :
-                    print('Error: Unknown data length')
-                    exit(1)
-                
-                fo.write('          <Attribute Name="{}" Center="Cell" AttributeType="{}">\n'.format(field, attributeType))
-                fo.write('            <DataStructure Format="HDF" DataType="Float" Precision="{}" Dimensions="{}">\n'.format(prec, dims))
+                fo.write('          <Attribute Name="{}" Center="Cell" AttributeType="{}">\n'.format(field, xdmfAttrTypes[nCmp]))
+                fo.write('            <DataStructure Format="HDF" DataType="Float" Precision="{}" Dimensions="{} {}">\n'.format(prec, nCells[i], nCmp))
                 fo.write('              {}:/FIELDS/{}/{}/{}\n'.format(h5Path, timeName, proc, field))
                 fo.write('            </DataStructure>\n')
                 fo.write('          </Attribute>\n')
@@ -272,6 +236,9 @@ def writeFields(f, fo, noZero) :
 
 
 
+"""
+Main part of program/script start below here
+"""
 
 
 # Read command line arguments
@@ -309,6 +276,7 @@ except:
 fieldsPresent = detectFields(f)
 if args.noFields is False and fieldsPresent :
     fo = open('{}/fieldData.xdmf'.format(args.dir), 'w')
+    print('Writing field data to file {}'.format(fo.name))
     writeFields(f, fo, args.noZero)
     fo.close()
 else :
@@ -321,6 +289,7 @@ if args.noLagrangian is False and clouds:
     for cloud in clouds :
         fo = open('{}/{}.xdmf'.format(args.dir, cloud), 'w')
         H = f['CLOUDS'][cloud]
+        print('Writing cloud data for \'{}\' to file {}'.format(cloud, fo.name))
         writeCloud(H, fo, args.noZero)
         fo.close()
 else :
