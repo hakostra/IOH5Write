@@ -55,5 +55,5 @@ There are a few known bugs and limitations:
 
 Found yet another bug? Got suggestions for improvements?
 ----------------------------------------------
-Feel free to contact me in the discussion thread at www.cfd-online.com (link soon to come).
+Feel free to contact me in the discussion thread at [http://www.cfd-online.com/Forums/openfoam-programming-development/122579-hdf5-io-library-openfoam.html](www.cfd-online.com).
 
