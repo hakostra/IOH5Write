@@ -10,6 +10,7 @@ __license__ = "GPL v3 or later"
 
 import h5py
 import numpy
+import math
 import re
 import argparse
 import os
@@ -21,15 +22,25 @@ def detectClouds(f) :
     # Check if the file contain any clouds
     if ('CLOUDS' in f['/']) is False :
         print('Note: No clouds present in file \'{}\''.format(args.input))
-        exit(1)
+        return False
     
     clouds = list(f['CLOUDS'].keys())
     return clouds
 
 
+# Function that checks is there are any fields present
+def detectFields(f) :
+    # Check if the file contain any fields
+    if ('MESH' in f) is False or ('FIELDS' in f) is False :
+        print('Error: No mesh and field data present in file \'{}\''.format(fileName))
+        return False
+    
+    return True
+
+
 
 # Function to write cloud data
-def writeCloud(cloud, fo) :
+def writeCloud(cloud, fo, noZero) :
     # Create a list of scalar time values
     timeNames = list(cloud.keys())
     timeValues = [float(i) for i in timeNames]
@@ -57,6 +68,10 @@ def writeCloud(cloud, fo) :
     
     # Loop over all times
     for index in timeIndex :
+        # Skip time = 0 if required
+        if noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
+            continue
+    
         timeName = timeNames[index]
         pathInFile = '{}:{}/{}'.format(h5Path, cloud.name, timeName)
         nPoints = cloud[timeName]['position'].shape[0]
@@ -128,12 +143,9 @@ def writeCloud(cloud, fo) :
 
 
 # Function to write field data
-def writeFields(f, fo) :
-    # Check if mesh and field data is present
-    if ('MESH' in f) is False or ('FIELDS' in f) is False :
-        print('Error: No mesh and field data present in file \'{}\''.format(fileName))
-        exit(1)
-
+def writeFields(f, fo, noZero) :
+    
+    # Sone useful handles
     mesh = f['MESH/0']
     fields = f['FIELDS']
 
@@ -186,6 +198,11 @@ def writeFields(f, fo) :
     
     # Loop over all times
     for index in timeIndex :
+    
+        # Skip time = 0 if required
+        if noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
+            continue
+        
         timeName = timeNames[index]
         
         fo.write('      <Grid GridType="Collection" CollectionType="Spatial">\n'.format(timeValues[index]))
@@ -262,6 +279,8 @@ parser = argparse.ArgumentParser(description='Script to parse an HDF5 file writt
 parser.add_argument('-i','--input', default='h5Data/h5Data0.h5', help='Input file name (default: \'h5Data/h5Data0.h5\')', required=False)
 parser.add_argument('-d','--dir', default='xdmf', help='Output directory (default: \'xdmf\')', required=False)
 parser.add_argument('-l','--noLagrangian', action='store_true', help='Skip Lagrangian clouds', required=False)
+parser.add_argument('-f','--noFields', action='store_true', help='Skip fields (mesh) data', required=False)
+parser.add_argument('-z','--noZero', action='store_true', help='Do not process time zero (t=0)', required=False)
 
 args = parser.parse_args()
 
@@ -286,19 +305,23 @@ except:
     os.mkdir(args.dir)  
 
 
-# Write fields
-fo = open('{}/fieldData.xdmf'.format(args.dir), 'w')
-writeFields(f, fo)
-fo.close()
+# Write fields if present
+fieldsPresent = detectFields(f)
+if args.noFields is False and fieldsPresent :
+    fo = open('{}/fieldData.xdmf'.format(args.dir), 'w')
+    writeFields(f, fo, args.noZero)
+    fo.close()
+else :
+    print('Skipping fields')
 
 
-# Detect and loop over clouds and write them
-if args.noLagrangian is False :
-    clouds = detectClouds(f)
+# Detect, loop over clouds and write them
+clouds = detectClouds(f)
+if args.noLagrangian is False and clouds:
     for cloud in clouds :
         fo = open('{}/{}.xdmf'.format(args.dir, cloud), 'w')
         H = f['CLOUDS'][cloud]
-        writeCloud(H, fo)
+        writeCloud(H, fo, args.noZero)
         fo.close()
 else :
     print('Skipping Lagrangian clouds')
