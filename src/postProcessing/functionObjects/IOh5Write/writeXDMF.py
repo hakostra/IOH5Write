@@ -42,7 +42,7 @@ def detectFields(f) :
 
 
 # Parse and write clouds
-def writeCloud(cloud, fo, noZero) :
+def writeCloud(cloud, fo, args) :
     
     # Create a list of scalar time values
     timeNames = list(cloud.keys())
@@ -68,8 +68,13 @@ def writeCloud(cloud, fo, noZero) :
     for index in timeIndex :
         
         # Skip time = 0 if required
-        if noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
+        if args.noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
             continue
+        
+        # Skip if it only is to process latest timestep
+        if args.latestTime and index != timeIndex[timeIndex.size-1] :
+            continue
+        
     
         timeName = timeNames[index]
         pathInFile = '{}:{}/{}'.format(h5Path, cloud.name, timeName)
@@ -126,7 +131,7 @@ def writeCloud(cloud, fo, noZero) :
 
 
 # Parse and write mesh/fields
-def writeFields(f, fo, noZero) :
+def writeFields(f, fo, args) :
     
     # Sone useful handles
     mesh = f['MESH/0']
@@ -180,8 +185,13 @@ def writeFields(f, fo, noZero) :
     for index in timeIndex :
     
         # Skip time = 0 if required
-        if noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
+        if args.noZero and index == timeIndex[0] and math.fabs(timeValues[index] - 0) < 1e-8 :
             continue
+        
+        # Skip if it only is to process latest timestep
+        if args.latestTime and index != timeIndex[timeIndex.size-1] :
+            continue
+        
         
         timeName = timeNames[index]
         
@@ -248,6 +258,7 @@ parser.add_argument('-d','--dir', default='xdmf', help='Output directory (defaul
 parser.add_argument('-l','--noLagrangian', action='store_true', help='Skip Lagrangian clouds', required=False)
 parser.add_argument('-f','--noFields', action='store_true', help='Skip fields (mesh) data', required=False)
 parser.add_argument('-z','--noZero', action='store_true', help='Do not process time zero (t=0)', required=False)
+parser.add_argument('-t','--latestTime', action='store_true', help='Only process latest timestep present', required=False)
 
 args = parser.parse_args()
 
@@ -277,7 +288,7 @@ fieldsPresent = detectFields(f)
 if args.noFields is False and fieldsPresent :
     fo = open('{}/fieldData.xdmf'.format(args.dir), 'w')
     print('Writing field data to file {}'.format(fo.name))
-    writeFields(f, fo, args.noZero)
+    writeFields(f, fo, args)
     fo.close()
 else :
     print('Skipping fields')
@@ -290,7 +301,7 @@ if args.noLagrangian is False and clouds:
         fo = open('{}/{}.xdmf'.format(args.dir, cloud), 'w')
         H = f['CLOUDS'][cloud]
         print('Writing cloud data for \'{}\' to file {}'.format(cloud, fo.name))
-        writeCloud(H, fo, args.noZero)
+        writeCloud(H, fo, args)
         fo.close()
 else :
     print('Skipping Lagrangian clouds')
