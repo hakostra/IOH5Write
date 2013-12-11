@@ -56,7 +56,7 @@ def writeCloud(cloud, fo, args):
     prec = cloud[timeNames[0]]['position'].dtype.itemsize
     
     # Find name and path to HDF5-file relative to XDMF-file
-    h5Path = os.path.relpath(cloud.parent.parent.file.filename, 
+    h5Path = os.path.relpath(cloud.parent.parent.file.filename,
                              os.path.dirname(fo.name))
     
     # Print header
@@ -107,7 +107,7 @@ def writeCloud(cloud, fo, args):
         # Loop over all attributes
         for attr in cloud[timeName]:
             h = cloud[timeName][attr]
-            nCmp =  int(h.size/h.shape[0])
+            nCmp = int(h.size/h.shape[0])
             
             # Determine number type (Int, Float)
             if h.dtype in (numpy.dtype('f4'), numpy.dtype('f8')):
@@ -137,7 +137,7 @@ def writeCloud(cloud, fo, args):
     # Print file footer
     fo.write('    </Grid>\n')
     fo.write('  </Domain>\n')
-    fo.write('</Xdmf>\n');
+    fo.write('</Xdmf>\n')
     
     # Return control
     return
@@ -201,7 +201,8 @@ def writeFields(f, fo, args):
         
         timeName = timeNames[index]
         
-        fo.write('      <Grid GridType="Collection" CollectionType="Spatial">\n'
+        fo.write('      <Grid GridType="Collection" '
+                 'CollectionType="Spatial">\n'
                  .format(timeValues[index]))
         
         fo.write('        <Time Type="Single" Value="{}" />\n'
@@ -214,13 +215,15 @@ def writeFields(f, fo, args):
                      .format(timeValues[index], proc))
             
             # Geometry definition
-            fo.write('          <Topology Type="Mixed" NumberOfElements="{}">\n'
+            fo.write('          <Topology Type="Mixed" '
+                     'NumberOfElements="{}">\n'
                      .format(nCells[i]))
             
             fo.write('            <DataStructure Dimensions="{}" '
                      'NumberType="Int" Format="HDF" >\n'.format(cellLength[i]))
             
-            fo.write('              {}:/MESH/0/{}/CELLS\n'.format(h5Path, proc))
+            fo.write('              {}:/MESH/0/{}/CELLS\n'
+                     .format(h5Path, proc))
             fo.write('            </DataStructure>\n')
             fo.write('          </Topology>\n')
             fo.write('          <Geometry GeometryType="XYZ">\n')
@@ -237,14 +240,15 @@ def writeFields(f, fo, args):
             # Loop over all fields
             for field in fields[timeName][proc]:
                 h = fields[timeName][proc][field]
-                nCmp =  int(h.size/h.shape[0])
+                nCmp = int(h.size/h.shape[0])
                 
                 fo.write('          <Attribute Name="{}" Center="Cell" '
                          'AttributeType="{}">\n'
                          .format(field, xdmfAttrTypes[nCmp]))
                 
                 fo.write('            <DataStructure Format="HDF" '
-                         'DataType="Float" Precision="{}" Dimensions="{} {}">\n'
+                         'DataType="Float" Precision="{}" '
+                         'Dimensions="{} {}">\n'
                          .format(prec, nCells[i], nCmp))
                 
                 fo.write('              {}:/FIELDS/{}/{}/{}\n'
@@ -265,43 +269,42 @@ def writeFields(f, fo, args):
     # Print footer
     fo.write('    </Grid>\n')
     fo.write('  </Domain>\n')
-    fo.write('</Xdmf>\n');
+    fo.write('</Xdmf>\n')
     
     # Return control
     return
-
 
 
 """ Main part of program/script start below here
 """
 # Set up and read command line arguments
 parser = argparse.ArgumentParser(description='Script to parse an HDF5 file '
-                                 'written by OpenFOAM  and write corresponding '
-                                 'XDMF files')
-parser.add_argument('-i','--input',
+                                 'written by OpenFOAM  and write '
+                                 'corresponding XDMF files')
+parser.add_argument('-i', '--input',
                     default='h5Data/h5Data0.h5',
                     help='Input file name (default: \'h5Data/h5Data0.h5\')',
                     required=False)
-parser.add_argument('-d','--dir',
+parser.add_argument('-d', '--dir',
                     default='xdmf',
                     help='Output directory (default: \'xdmf\')',
                     required=False)
-parser.add_argument('-l','--noLagrangian',
+parser.add_argument('-l', '--noLagrangian',
                     action='store_true',
                     help='Skip Lagrangian clouds',
                     required=False)
-parser.add_argument('-f','--noFields',
+parser.add_argument('-f', '--noFields',
                     action='store_true',
                     help='Skip fields (mesh) data',
                     required=False)
-parser.add_argument('-z','--noZero',
+parser.add_argument('-z', '--noZero',
                     action='store_true',
                     help='Do not process time zero (t=0)',
                     required=False)
-parser.add_argument('-t','--latestTime',
+parser.add_argument('-t', '--latestTime',
                     action='store_true',
                     help='Only process latest timestep present',
-                        required=False)
+                    required=False)
 
 args = parser.parse_args()
 
@@ -320,7 +323,7 @@ f = h5py.File(args.input, 'r')
 try:
     os.stat(args.dir)
 except:
-    os.mkdir(args.dir)  
+    os.mkdir(args.dir)
 
 # Write fields if present
 fieldsPresent = detectFields(f)
@@ -346,4 +349,3 @@ else:
 
 # Close HDF5 file
 f.close()
-
