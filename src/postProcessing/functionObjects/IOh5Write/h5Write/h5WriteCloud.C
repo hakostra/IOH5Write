@@ -218,9 +218,6 @@ void Foam::h5Write::cloudWrite()
         }
         H5Dclose(dsetID);
         
-        // Close filespace
-        H5Sclose(fileSpace);
-        
         
         // Cell of particle
         sprintf
