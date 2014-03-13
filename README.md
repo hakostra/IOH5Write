@@ -6,9 +6,9 @@ Library that write OpenFOAM cases as HDF5 archives instead of the default one-fi
 
 Installation
 ------------
-1. Make sure you have a working copy of OpenFOAM 2.2.0, 2.2.1 or 2.2.x. Make sure that you have all necessary compilers and development libraries, including MPI.
+1. Make sure you have a working copy of OpenFOAM 2.2.x or 2.3.x. Make sure that you have all necessary compilers and development libraries, including MPI.
 2. Install the HDF5-library. Make sure that you install or compile it with parallel/MPI support. In Ubuntu this is done by installing the package ``libhdf5-openmpi-dev``. I guess it is necessary to compile both OpenFOAM and HDF5 against the same MPI library and version. I use the OpenMPI that is supplied with my system, and have compiled both OpenFOAM and HDF5 against this.
-3. Grab a copy of this repository, and enter the code directory. You can for example place the code in your ``~/OpenFOAM/username-2.2.x`` folder.
+3. Grab a copy of this repository, and enter the code directory. You can for example place the code in your ``~/OpenFOAM/username-2.3.x`` folder.
 4. Set the environment variable ``HDF5_DIR`` to your HDF5 installation directory (this might f.ex. be ``/usr``). Make the variable "visible" for the compile script (e.g. ``export HDF5_DIR=/usr``) before you compile.
 5. Compile the code with the common ``./Allwmake`` and wait.
 
@@ -43,12 +43,17 @@ Testing
 Test the code by running the attached cavity tutorial with the attached ``./Allrun`` script. A directory called h5Data should be created, in which the file h5Data0.h5 is created. To use the code on other cases, look in the ``controlDict`` file in this case.
 
 
+Compatibility
+-------------
+The code works with both OpenFOAM 2.2.x and 2.3.x. It is recommended to use HDF5 version 1.8.9 or newer. The testing is only done with GCC compilers.
+
+
 Known bugs and limitations
 --------------------------
 There are a few known bugs and limitations:
 
 1. The code only work in parallel. This is a consequence of the design of OpenFOAM, since ``MPI_Init`` is never called for serial runs, hence the parallel HDF5 library cannot use MPI-IO.
-2. The XDMF file must be written after the simulation. This is not a bug, but a slight limitation.
+2. The XDMF file must be written after the simulation. This is not a bug, but a slight limitation embeddedn in the design.
 3. No boundary data is written. This is a consequence of laziness. I have never needed this for my research, hence only the internal cell-centred data is written. Again, this is not a difficult addition, and if anyone had the time to add this, please contact me if you want me to include this in the public release.
 4. The code is not very well structured, and does not utilize many of the object-oriented features C++ gives. This is partly because the HDF5 library is a pure C library, requiring you to deal with pointers to arrays and stuff, partly due to my lack of C++ skills. This is on top of the list of things that needs to be done, perhaps I will fix it when I find time.
 
