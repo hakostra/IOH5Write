@@ -74,429 +74,378 @@ void Foam::h5Write::cloudWrite()
         }
         
         
-        // Allocate memory
-        label* origProc;    origProc = new label[myParticles];
-        label* origId;      origId   = new label[myParticles];
-        label* cell;        cell     = new label[myParticles];
-        
-        ioScalar* position; position = new ioScalar[myParticles*3];
-        ioScalar* U;        U        = new ioScalar[myParticles*3];
-        ioScalar* Us;       Us       = new ioScalar[myParticles*3];
-        
-        ioScalar* rho;      rho      = new ioScalar[myParticles];
-        ioScalar* d;        d        = new ioScalar[myParticles];
-        ioScalar* age;      age      = new ioScalar[myParticles];
-        
-        
-        label i = 0;
-        
-        // Loop through the particles and construct the arrays
-        forAllIter(basicKinematicCloud, *q, pIter)
-        {
-            origProc[i]     = pIter().origProc();
-            origId[i]       = pIter().origId();
-            cell[i]         = pIter().cell();
-            
-            position[3*i+0] = pIter().position().x();
-            position[3*i+1] = pIter().position().y();
-            position[3*i+2] = pIter().position().z();
-            
-            U[3*i+0]        = pIter().U().x();
-            U[3*i+1]        = pIter().U().y();
-            U[3*i+2]        = pIter().U().z();
-            
-            Us[3*i+0]       = pIter().U().x() - pIter().Uc().x();
-            Us[3*i+1]       = pIter().U().y() - pIter().Uc().y();
-            Us[3*i+2]       = pIter().U().z() - pIter().Uc().z();
-            
-            rho[i]          = pIter().rho();
-            d[i]            = pIter().d();
-            age[i]          = pIter().age();
-            
-            i++;
-        }
-        
-        
-        
-        // Some variable declarations
+        // Define a variable for dataset name
         char datasetName[80];
-        hsize_t dimsf[2];
-        hsize_t start[2];
-        hsize_t count[2];
-        hid_t fileSpace;
-        hid_t memSpace;
-        hid_t dsetID;
-        hid_t plistCreate, plistWrite;
-        
-        // Set dimension, start and count values
-        start[0] = offsets[Pstream::myProcNo()];
-        start[1] = 0;
-        count[0] = myParticles;
-        count[1] = 3;
-        dimsf[0] = nTot;
-        dimsf[1] = 3;
         
         
-        // Set property to create parent groups as neccesary
-        plistCreate = H5Pcreate(H5P_LINK_CREATE);
-        H5Pset_create_intermediate_group(plistCreate, 1);
+        // Allocate memory for 1-comp. dataset of type 'label'
+        label* particleLabel;
+        particleLabel = new label[myParticles];
         
-        // Create property list for dataset write.
-        plistWrite = H5Pcreate(H5P_DATASET_XFER);
-        H5Pset_dxpl_mpio(plistWrite, H5_XFER_MODE);
-        
-        
-        // Filespace for particle IDs
-        fileSpace = H5Screate_simple(1, dimsf, NULL);
-        H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, start, NULL, count, NULL);
-        
-        // Original processor ID
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/origProc",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_NATIVE_INT,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write original processor ID
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleLabel[i] = pIter().origProc();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_NATIVE_INT,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    origProc
+                    datasetName,
+                    "CLOUDS/%s/%s/origProc",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
-        }
-        H5Dclose(dsetID);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleLabel,
+                    datasetName,
+                    H5T_NATIVE_INT
+                );
+        }  
         
-        // ID on that processor
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/origId",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_NATIVE_INT,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write original ID
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleLabel[i] = pIter().origId();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_NATIVE_INT,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    origId
+                    datasetName,
+                    "CLOUDS/%s/%s/origId",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-              H5Sclose(memSpace);
-        }
-        H5Dclose(dsetID);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleLabel,
+                    datasetName,
+                    H5T_NATIVE_INT
+                );
+        } 
         
-        
-        // Cell of particle
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/cell",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_NATIVE_INT,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write cell number
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleLabel[i] = pIter().cell();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_NATIVE_INT,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    cell
+                    datasetName,
+                    "CLOUDS/%s/%s/cell",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-              H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleLabel,
+                    datasetName,
+                    H5T_NATIVE_INT
+                );
         }
-        H5Dclose(dsetID);
         
-        // Close filespace
-        H5Sclose(fileSpace);
-        
+        // Free memory for 1-comp. dataset of type 'label'
+        delete [] particleLabel;
         
         
-        // Filespace for particle positions and velocities
-        fileSpace = H5Screate_simple(2, dimsf, NULL);
-        H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, start, NULL, count, NULL);
+        // Allocate memory for 1-comp. dataset of type 'ioScalar'
+        ioScalar* particleScalar1;
+        particleScalar1 = new ioScalar[myParticles];
         
-        // Position
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/position",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write density rho
         {
-            memSpace = H5Screate_simple(2, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar1[i] = pIter().rho();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    position
+                    datasetName,
+                    "CLOUDS/%s/%s/rho",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleScalar1,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
         
-        // Velocity
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/U",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write diameter d
         {
-            memSpace = H5Screate_simple(2, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar1[i] = pIter().d();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    U
+                    datasetName,
+                    "CLOUDS/%s/%s/d",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleScalar1,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
         
-        
-        // Slip velocity (i.e. difference between particle and fluid velocity)
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/Us",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write age
         {
-            memSpace = H5Screate_simple(2, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar1[i] = pIter().age();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    Us
+                    datasetName,
+                    "CLOUDS/%s/%s/age",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleScalar1,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
+        
+        // Free memory for 1-comp. dataset of type 'ioScalar'
+        delete [] particleScalar1;
         
         
-        // Close filespace
-        H5Sclose(fileSpace);
+        // Allocate memory for 3-comp. dataset of type 'ioScalar'
+        ioScalar* particleScalar3;
+        particleScalar3 = new ioScalar[myParticles*3];
         
-        
-        
-        // Filespace for particle density, diameter and age
-        fileSpace = H5Screate_simple(1, dimsf, NULL);
-        H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, start, NULL, count, NULL);
-        
-        // Density
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/rho",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write position
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar3[3*i+0] = pIter().position().x();
+                particleScalar3[3*i+1] = pIter().position().y();
+                particleScalar3[3*i+2] = pIter().position().z();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    rho
+                    datasetName,
+                    "CLOUDS/%s/%s/position",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    3,
+                    (void*) particleScalar3,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
         
-        // Diameter
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/d",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write velocity U
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar3[3*i+0] = pIter().U().x();
+                particleScalar3[3*i+1] = pIter().U().y();
+                particleScalar3[3*i+2] = pIter().U().z();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    d
+                    datasetName,
+                    "CLOUDS/%s/%s/U",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    3,
+                    (void*) particleScalar3,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
         
-        // Age
-        sprintf
-            (
-                datasetName,
-                "CLOUDS/%s/%s/age",
-                cloudNames_[cloudI].c_str(),
-                mesh_.time().timeName().c_str()
-            );
-        dsetID = H5Dcreate2
-            (
-                fileID_,
-                datasetName,
-                H5T_SCALAR,
-                fileSpace,
-                plistCreate,
-                H5P_DEFAULT,
-                H5P_DEFAULT
-            );
-        if ( myParticles > 0 )
+        // Write slip velocity Us = U - Uc
         {
-            memSpace = H5Screate_simple(1, count, NULL);
-            H5Dwrite
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleScalar3[3*i+0] = pIter().U().x() - pIter().Uc().x();
+                particleScalar3[3*i+1] = pIter().U().y() - pIter().Uc().y();
+                particleScalar3[3*i+2] = pIter().U().z() - pIter().Uc().z();
+                i++;
+            }
+            
+            sprintf
                 (
-                    dsetID, 
-                    H5T_SCALAR,
-                    memSpace,
-                    fileSpace,
-                    plistWrite,
-                    age
+                    datasetName,
+                    "CLOUDS/%s/%s/Us",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
                 );
-            H5Sclose(memSpace);
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    3,
+                    (void*) particleScalar3,
+                    datasetName,
+                    H5T_SCALAR
+                );
         }
-        H5Dclose(dsetID);
         
-        // Close filespace and property lists
-        H5Sclose(fileSpace);
-        H5Pclose(plistCreate);
-        H5Pclose(plistWrite);
+        // Free memory for 3-comp. dataset of type 'ioScalar'
+        delete [] particleScalar3;
         
-        
-        // Release memory
-        delete [] origProc;
-        delete [] origId;
-        delete [] cell;
-        
-        delete [] position;
-        delete [] U;
-        delete [] Us;
-        
-        delete [] rho;
-        delete [] d;
-        delete [] age;
     }
 }
 
+
+void Foam::h5Write::cloudWriteAttrib
+(
+    label myParticles,
+    label offset,
+    label nTot,
+    label nCmps,
+    void* databuf,
+    char* datasetName,
+    hid_t H5type
+)
+{
+    // Some variable declarations
+    hsize_t dimsf[2];
+    hsize_t start[2];
+    hsize_t count[2];
+    hid_t fileSpace;
+    hid_t memSpace;
+    hid_t dsetID;
+    hid_t plistCreate, plistWrite;
+    
+    // Set dimension, start and count values
+    start[0] = offset;
+    start[1] = 0;
+    count[0] = myParticles;
+    count[1] = nCmps;
+    dimsf[0] = nTot;
+    dimsf[1] = nCmps;
+    
+    
+    // Set property to create parent groups as neccesary
+    plistCreate = H5Pcreate(H5P_LINK_CREATE);
+    H5Pset_create_intermediate_group(plistCreate, 1);
+    
+    // Create property list for dataset write.
+    plistWrite = H5Pcreate(H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio(plistWrite, H5_XFER_MODE);
+    
+    // Cretate filespace for data
+    fileSpace = H5Screate_simple(2, dimsf, NULL);
+    H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, start, NULL, count, NULL);
+    
+    // Create dataset
+    dsetID = H5Dcreate2
+        (
+            fileID_,
+            datasetName,
+            H5type,
+            fileSpace,
+            plistCreate,
+            H5P_DEFAULT,
+            H5P_DEFAULT
+        );
+    
+    // Write actual data only if process holds data
+    if ( myParticles > 0 )
+    {
+        memSpace = H5Screate_simple(2, count, NULL);
+        H5Dwrite
+            (
+                dsetID, 
+                H5type,
+                memSpace,
+                fileSpace,
+                plistWrite,
+                databuf
+            );
+        H5Sclose(memSpace);
+    }
+    
+    // Close open handles
+    H5Dclose(dsetID);
+    H5Sclose(fileSpace);
+    H5Pclose(plistCreate);
+    H5Pclose(plistWrite);
+}
 
 // ************************************************************************* //

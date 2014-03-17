@@ -166,9 +166,20 @@ protected:
       
       // Functions for handling particle cloud data
           
-          // Field write wrapper
+          // Cloud write wrapper
           void cloudWrite();
           
+          // Write attributes for cloud particles
+          void cloudWriteAttrib
+          (
+              label myParticles,
+              label offset,
+              label nTot,
+              label nCmps,
+              void* databuf,
+              char* datasetName,
+              hid_t H5type
+          );
           
       // Functions for handling mesh 
       
