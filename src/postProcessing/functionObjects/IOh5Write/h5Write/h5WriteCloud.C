@@ -169,6 +169,35 @@ void Foam::h5Write::cloudWrite()
                 );
         }
         
+        // Write current process ID
+        {
+            label i = 0;
+            forAllIter(basicKinematicCloud, *q, pIter)
+            {
+                particleLabel[i] = Pstream::myProcNo();
+                i++;
+            }
+            
+            sprintf
+                (
+                    datasetName,
+                    "CLOUDS/%s/%s/currProc",
+                    cloudNames_[cloudI].c_str(),
+                    mesh_.time().timeName().c_str()
+                );
+            
+            cloudWriteAttrib
+                (
+                    myParticles,
+                    offsets[Pstream::myProcNo()],
+                    nTot,
+                    1,
+                    (void*) particleLabel,
+                    datasetName,
+                    H5T_NATIVE_INT
+                );
+        }
+        
         // Free memory for 1-comp. dataset of type 'label'
         delete [] particleLabel;
         
