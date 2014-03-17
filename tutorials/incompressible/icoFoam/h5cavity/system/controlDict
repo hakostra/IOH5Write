@@ -43,10 +43,42 @@ timeFormat      general;
 
 timePrecision   6;
 
-runTimeModifiable true;
+runTimeModifiable false;
 
 functions
 {
+    Lambda2
+    {
+        functionObjectLibs  ( "libutilityFunctionObjects.so" );
+        type                Lambda2;
+        
+        outputControl       outputTime;
+    }
+    
+    Q
+    {
+        functionObjectLibs  ( "libutilityFunctionObjects.so" );
+        type                Q;
+        
+        outputControl       outputTime;
+    }
+    
+    // Only available if you have swak4Foam installed
+    // (uncomment if you have swak4Foam)
+    /*
+    vorticity
+    {
+        functionObjectLibs  ( "libswakFunctionObjects.so" );
+        type                expressionField;
+        
+        outputControl       outputTime;
+
+        fieldName           vorticity;
+        expression          "curl(U)";
+        autowrite           true;
+    }
+    */
+    
     h5Data
     {
         // Write the solution (Eulerian and Lagrangian fields)
@@ -57,7 +89,7 @@ functions
         functionObjectLibs  ( "libIOh5Write.so" );
         
         // Volume fields to write
-        objectNames         ( U p );
+        objectNames         ( U p Lambda2 Q vorticity );
         
         // Kinematic clouds to write (leave blank to skip)
         cloudNames          (  );
