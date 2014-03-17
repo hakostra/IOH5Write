@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Copy base case
+if [ ! -d system ]; then
+  cp -r $FOAM_TUTORIALS/lagrangian/icoUncoupledKinematicParcelFoam/hopper/hopperInitialState/* ./
+fi
+
+# Insert function object in system/controlDict file
+PRESENT=`cat system/controlDict | grep libIOh5Write.so | wc -l`
+if [ $PRESENT -lt '1' ]; then
+  cat functionObjects >> system/controlDict
+fi
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Mesh and run simulation
+runApplication blockMesh
+runApplication decomposePar
+runParallel `getApplication` 4
+
+# Dump HDF5 stats to terminal
+echo -e "\n\n"
+h5stat h5Data/h5Data0.h5
+

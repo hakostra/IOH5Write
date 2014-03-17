@@ -1,0 +1,24 @@
+
+functions
+{
+    h5Data
+    {
+        // Write the solution (Eulerian and Lagrangian fields)
+        // into a HDF5 container
+        type                h5Write;
+        
+        // Where to load it from
+        functionObjectLibs  ( "libIOh5Write.so" );
+        
+        // Volume fields to write
+        objectNames         (  );
+        
+        // Kinematic clouds to write (leave blank to skip)
+        cloudNames          ( kinematicCloud );
+        
+        // Write interval (in number of iterations)
+        writeInterval       5;
+    }
+}
+
+// ************************************************************************* //
