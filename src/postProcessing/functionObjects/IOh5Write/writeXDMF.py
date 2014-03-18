@@ -147,7 +147,8 @@ def writeCloud(cloud, fo, args):
 def writeFields(f, fo, args):
     
     # Sone useful handles
-    mesh = f['MESH/0']
+    meshTime = list(f['MESH'].keys())[0]
+    mesh = f['MESH'][meshTime]
     fields = f['FIELDS']
 
     # Find number of points, cells and dataset length for each process
@@ -222,8 +223,8 @@ def writeFields(f, fo, args):
             fo.write('            <DataStructure Dimensions="{}" '
                      'NumberType="Int" Format="HDF" >\n'.format(cellLength[i]))
             
-            fo.write('              {}:/MESH/0/{}/CELLS\n'
-                     .format(h5Path, proc))
+            fo.write('              {}:/MESH/{}/{}/CELLS\n'
+                     .format(h5Path, meshTime, proc))
             fo.write('            </DataStructure>\n')
             fo.write('          </Topology>\n')
             fo.write('          <Geometry GeometryType="XYZ">\n')
@@ -231,8 +232,8 @@ def writeFields(f, fo, args):
                      'NumberType="Float" Presicion="{}" Format="HDF" >\n'
                      .format(nPoints[i], prec))
             
-            fo.write('              {}:/MESH/0/{}/POINTS\n'
-                     .format(h5Path, proc))
+            fo.write('              {}:/MESH/{}/{}/POINTS\n'
+                     .format(h5Path, meshTime, proc))
             
             fo.write('            </DataStructure>\n')
             fo.write('          </Geometry>\n')
