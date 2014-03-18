@@ -83,6 +83,7 @@ void Foam::h5Write::cloudWrite()
         particleLabel = new label[myParticles];
         
         // Write original processor ID
+        if (findStrings(cloudAttribs_, "origProc"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -112,6 +113,7 @@ void Foam::h5Write::cloudWrite()
         }  
         
         // Write original ID
+        if (findStrings(cloudAttribs_, "origId"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -141,6 +143,7 @@ void Foam::h5Write::cloudWrite()
         } 
         
         // Write cell number
+        if (findStrings(cloudAttribs_, "cell"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -170,6 +173,7 @@ void Foam::h5Write::cloudWrite()
         }
         
         // Write current process ID
+        if (findStrings(cloudAttribs_, "currProc"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -207,6 +211,7 @@ void Foam::h5Write::cloudWrite()
         particleScalar1 = new ioScalar[myParticles];
         
         // Write density rho
+        if (findStrings(cloudAttribs_, "rho"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -236,6 +241,7 @@ void Foam::h5Write::cloudWrite()
         }
         
         // Write diameter d
+        if (findStrings(cloudAttribs_, "d"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -265,6 +271,7 @@ void Foam::h5Write::cloudWrite()
         }
         
         // Write age
+        if (findStrings(cloudAttribs_, "age"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -302,6 +309,7 @@ void Foam::h5Write::cloudWrite()
         particleScalar3 = new ioScalar[myParticles*3];
         
         // Write position
+        if (findStrings(cloudAttribs_, "position"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -333,6 +341,7 @@ void Foam::h5Write::cloudWrite()
         }
         
         // Write velocity U
+        if (findStrings(cloudAttribs_, "U"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)
@@ -364,6 +373,7 @@ void Foam::h5Write::cloudWrite()
         }
         
         // Write slip velocity Us = U - Uc
+        if (findStrings(cloudAttribs_, "Us"))
         {
             label i = 0;
             forAllIter(basicKinematicCloud, *q, pIter)

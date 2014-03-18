@@ -90,6 +90,7 @@ void Foam::h5Write::read(const dictionary& dict)
     // Lookup in dictionary
     dict.lookup("objectNames") >> objectNames_;
     dict.lookup("cloudNames") >> cloudNames_;
+    dict.lookup("cloudAttribs") >> cloudAttribs_;
     dict.lookup("writeInterval") >> writeInterval_;
     
     // Set next write NOW

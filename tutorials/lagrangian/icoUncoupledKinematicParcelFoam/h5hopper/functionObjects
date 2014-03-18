@@ -16,6 +16,19 @@ functions
         // Kinematic clouds to write (leave blank to skip)
         cloudNames          ( kinematicCloud );
         
+        // Attributes to write for particles. Valid choices are:
+        //  - origProc        = Original process (from where it was injected)
+        //  - origId          = ID on orignal process
+        //  - cell            = Current cell (on local process)
+        //  - currProc        = Current process
+        //  - rho             = Particle density
+        //  - d               = Particle diameter
+        //  - age             = Particle age
+        //  - position        = Position in space
+        //  - U               = Particle velocity
+        //  - Us              = Slip velocity Us = U - Uc
+        cloudAttribs        ( position U Us age );
+        
         // Write interval (in number of iterations)
         writeInterval       5;
     }

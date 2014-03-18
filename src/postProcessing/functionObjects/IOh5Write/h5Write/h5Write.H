@@ -113,6 +113,9 @@ protected:
             
             //- Names of clouds to write
             wordReList cloudNames_;
+            
+            //- Which attributes to write for particle data
+            wordReList cloudAttribs_;
 
             //- Write interval (in number of iterations)
             label writeInterval_;
