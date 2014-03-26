@@ -192,7 +192,7 @@ void Foam::h5Write::meshWriteCells()
                 "h5Write::meshWriteCells()"
             )   << "Unsupported or unknown cell type for cell number "
                 << cellId << endl
-                << exit(FatalIOError);
+                << exit(FatalError);
         }
     }
     
