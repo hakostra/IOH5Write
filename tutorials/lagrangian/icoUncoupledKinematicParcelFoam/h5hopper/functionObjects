@@ -29,6 +29,15 @@ functions
         //  - Us              = Slip velocity Us = U - Uc
         cloudAttribs        ( position U Us age );
         
+        // HDF5 dataset attributes. Valid options are:
+        //  - shuffle         = Shuffle bytes in order to improve compression
+        //  - deflate         = Compress data
+        //  - checksum        = Write checsum to data to improve reliability
+        h5Attribs           (  );
+        
+        // HDF5 chunk size (in number of bytes)
+        chunkSize           0;
+        
         // Write interval (in number of iterations)
         writeInterval       5;
     }

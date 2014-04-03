@@ -82,4 +82,38 @@ void Foam::h5Write::fileClose()
     
 }
 
+
+void Foam::h5Write::dsetSetProps
+(
+    label nCmps,
+    label size,
+    label maxRows,
+    hid_t plistDCreate
+)
+{
+    hsize_t cdims[2];
+    label nRows;
+    
+    // Set dataset dimensions
+    label nDims = 2;
+    if (nCmps == 1)
+    {
+        nDims = 1;
+    }
+    
+    // Set chunk size
+    if (chunkSize_ > 0)
+    {
+        nRows = chunkSize_/(size*nCmps);
+        if (nRows > maxRows) {
+            nRows = maxRows;
+        }
+        cdims[0] = nRows;
+        cdims[1] = nCmps;
+        
+        H5Pset_chunk(plistDCreate, nDims, cdims);
+    }
+}
+
+
 // ************************************************************************* //

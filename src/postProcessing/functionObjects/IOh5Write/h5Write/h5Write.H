@@ -116,6 +116,9 @@ protected:
             
             //- Which attributes to write for particle data
             wordReList cloudAttribs_;
+            
+            //- HDF5 chunk size (in bytes)
+            label chunkSize_;
 
             //- Write interval (in number of iterations)
             label writeInterval_;
@@ -153,6 +156,15 @@ protected:
           
           // Close dataset for field data
           void fileClose();
+          
+          // Set dataset creation properties such as chunking
+          void dsetSetProps
+          (
+              label nCmps,
+              label size,
+              label maxRows,
+              hid_t plistDCreate
+          );
       
       
       // Functions for handling field data

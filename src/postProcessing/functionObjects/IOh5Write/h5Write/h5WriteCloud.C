@@ -429,7 +429,7 @@ void Foam::h5Write::cloudWriteAttrib
     hid_t fileSpace;
     hid_t memSpace;
     hid_t dsetID;
-    hid_t plistCreate, plistWrite;
+    hid_t plistLCreate, plistDCreate, plistWrite;
     
     // Set dimension, start and count values
     start[0] = offset;
@@ -439,17 +439,26 @@ void Foam::h5Write::cloudWriteAttrib
     dimsf[0] = nTot;
     dimsf[1] = nCmps;
     
-    
     // Set property to create parent groups as neccesary
-    plistCreate = H5Pcreate(H5P_LINK_CREATE);
-    H5Pset_create_intermediate_group(plistCreate, 1);
+    plistLCreate = H5Pcreate(H5P_LINK_CREATE);
+    H5Pset_create_intermediate_group(plistLCreate, 1);
+    
+    // Set chunking, compression and other HDF5 dataset properties
+    plistDCreate = H5Pcreate(H5P_DATASET_CREATE);
+    dsetSetProps(nCmps, sizeof(ioScalar), nTot, plistDCreate);
     
     // Create property list for dataset write.
     plistWrite = H5Pcreate(H5P_DATASET_XFER);
     H5Pset_dxpl_mpio(plistWrite, H5_XFER_MODE);
     
     // Cretate filespace for data
-    fileSpace = H5Screate_simple(2, dimsf, NULL);
+    label nDims = 2;
+    if (nCmps == 1)
+    {
+        nDims = 1;
+    }
+    
+    fileSpace = H5Screate_simple(nDims, dimsf, NULL);
     H5Sselect_hyperslab(fileSpace, H5S_SELECT_SET, start, NULL, count, NULL);
     
     // Create dataset
@@ -459,15 +468,15 @@ void Foam::h5Write::cloudWriteAttrib
             datasetName,
             H5type,
             fileSpace,
-            plistCreate,
-            H5P_DEFAULT,
+            plistLCreate,
+            plistDCreate,
             H5P_DEFAULT
         );
     
     // Write actual data only if process holds data
     if ( myParticles > 0 )
     {
-        memSpace = H5Screate_simple(2, count, NULL);
+        memSpace = H5Screate_simple(nDims, count, NULL);
         H5Dwrite
             (
                 dsetID, 
@@ -483,7 +492,8 @@ void Foam::h5Write::cloudWriteAttrib
     // Close open handles
     H5Dclose(dsetID);
     H5Sclose(fileSpace);
-    H5Pclose(plistCreate);
+    H5Pclose(plistLCreate);
+    H5Pclose(plistDCreate);
     H5Pclose(plistWrite);
 }
 

@@ -93,6 +93,9 @@ void Foam::h5Write::read(const dictionary& dict)
     dict.lookup("cloudAttribs") >> cloudAttribs_;
     dict.lookup("writeInterval") >> writeInterval_;
     
+    // Lookup chunk size if present
+    chunkSize_ = dict.lookupOrDefault<label>("chunkSize", 0);
+    
     // Set next write NOW
     nextWrite_ = 0;
     timeSteps_ = 0;

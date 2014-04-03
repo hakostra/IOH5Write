@@ -65,6 +65,7 @@ void Foam::h5Write::meshWritePoints()
     hid_t fileSpace;
     hid_t dsetID;
     hid_t plistID;
+    hid_t plistDCreate;
     
     forAll(nPoints, proc)
     {
@@ -77,6 +78,10 @@ void Foam::h5Write::meshWritePoints()
         // Set property to create parent groups as neccesary
         plistID = H5Pcreate(H5P_LINK_CREATE);
         H5Pset_create_intermediate_group(plistID, 1);
+        
+        // Set chunking, compression and other HDF5 dataset properties
+        plistDCreate = H5Pcreate(H5P_DATASET_CREATE);
+        dsetSetProps(3, sizeof(ioScalar), nPoints[proc], plistDCreate);
         
         // Create the dataset for points
         sprintf
@@ -94,11 +99,12 @@ void Foam::h5Write::meshWritePoints()
                 H5T_SCALAR,
                 fileSpace,
                 plistID,
-                H5P_DEFAULT,
+                plistDCreate,
                 H5P_DEFAULT
             );
         H5Dclose(dsetID);
         H5Pclose(plistID);
+        H5Pclose(plistDCreate);
         H5Sclose(fileSpace);
     }
     
@@ -211,6 +217,7 @@ void Foam::h5Write::meshWriteCells()
     hid_t dsetID;
     hid_t attrID;
     hid_t plistID;
+    hid_t plistDCreate;
     
     forAll(datasetSizes, proc)
     {
@@ -218,6 +225,9 @@ void Foam::h5Write::meshWriteCells()
         plistID = H5Pcreate(H5P_LINK_CREATE);
         H5Pset_create_intermediate_group(plistID, 1);
         
+        // Set chunking, compression and other HDF5 dataset properties
+        plistDCreate = H5Pcreate(H5P_DATASET_CREATE);
+        dsetSetProps(1, sizeof(int), datasetSizes[proc], plistDCreate);
         
         // Create dataspace for cell list
         dimsf[0] = datasetSizes[proc];
@@ -238,7 +248,7 @@ void Foam::h5Write::meshWriteCells()
                 H5T_NATIVE_INT,
                 fileSpace,
                 plistID,
-                H5P_DEFAULT,
+                plistDCreate,
                 H5P_DEFAULT
             );
         H5Sclose(fileSpace);
@@ -272,6 +282,7 @@ void Foam::h5Write::meshWriteCells()
         // Close last access pointers
         H5Dclose(dsetID);
         H5Pclose(plistID);
+        H5Pclose(plistDCreate);
     }
     
     
