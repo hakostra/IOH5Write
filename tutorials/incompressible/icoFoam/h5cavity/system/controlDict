@@ -107,6 +107,9 @@ functions
         //  - Us              = Slip velocity Us = U - Uc
         cloudAttribs        (  );
         
+        // HDF5 chunk size (in number of bytes, 0 = no chunking)
+        chunkSize           0;
+        
         // Write interval (in number of iterations)
         writeInterval       5;
     }
